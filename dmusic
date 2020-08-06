@@ -1,0 +1,38 @@
+#!/bin/bash
+
+process_directory() {
+	echo "Processing directory $1 (output files to $2)"
+	local is_album_directory=0
+	local album_art=
+	for file in "$1"/*; do
+		if [ -d "$file" ]; then
+			process_directory "$file" "$2"
+		else
+			case "$(file -b "$file")" in
+				"Audio file"*) is_album_directory=1;;
+				*"image data"*) album_art="$file";;
+			esac
+		fi
+	done
+	if [ "$is_album_directory" -eq 1 ]; then
+		local album_name=$(basename "$1")
+		echo "it's an album! writing to $2/$album_name.desktop"
+		# FIXME: this will go badly wrong if there are special characters (double-quote, backtick, dollar, backslash) in the path
+		cat > "$2/$album_name.desktop" <<-EOF
+		[Desktop Entry]
+		Type=Application
+		Name=$album_name
+		Exec=dmusic-play-directory "$1"
+		EOF
+		if [ -n "$album_art" ]; then
+			cat >> "$2/$album_name.desktop" <<-EOF
+			Icon=$(realpath "$album_art")
+			EOF
+		fi
+		chmod +x "$2/$album_name.desktop"
+		gio set "$2/$album_name.desktop" metadata::trusted yes
+	fi
+	echo "Done with directory $1"
+}
+
+process_directory ~/Music ~/Music

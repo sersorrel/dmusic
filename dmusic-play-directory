@@ -1,0 +1,17 @@
+#!/bin/sh
+
+first_file=1
+
+# rhythmbox doesn't support "play this directory"
+for file in "$1"/*; do
+	case "$(file -b "$file")" in
+		"Audio file"*)
+			if [ "$first_file" -eq 1 ]; then
+				rhythmbox-client --clear-queue --play-uri "$file"
+				first_file=0
+			else
+				rhythmbox-client --enqueue "$file"
+			fi
+			;;
+	esac
+done
