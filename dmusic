@@ -8,9 +8,9 @@ process_directory() {
 		if [ -d "$file" ]; then
 			process_directory "$file" "$2"
 		else
-			case "$(file -b "$file")" in
-				"Audio file"*) is_album_directory=1;;
-				*"image data"*) album_art="$file";;
+			case "$(file -bi "$file")" in
+				audio/*) is_album_directory=1;;
+				image/*) album_art="$file";;
 			esac
 		fi
 	done
